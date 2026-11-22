@@ -1,0 +1,6 @@
+line-length = 100
+exclude = ["tests/__pycache__"]
+
+[lint]
+select = ["E", "F"]
+ignore = ["E501"]

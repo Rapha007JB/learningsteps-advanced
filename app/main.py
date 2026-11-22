@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 from routers.journal_router import router as journal_router
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import Counter, Histogram, generate_latest
 import logging
 import time
 
