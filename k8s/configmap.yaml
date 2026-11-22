@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: learningsteps-config
+  labels:
+    app: learningsteps-api
+data:
+  # Non-secret settings only. Secrets (DATABASE_URL) come from Azure Key Vault.
+  APP_ENV: "dev"
+  UVICORN_LOG_LEVEL: "info"

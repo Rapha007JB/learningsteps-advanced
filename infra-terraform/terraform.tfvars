@@ -1,11 +1,13 @@
-location        = "West Europe"
-environment     = "demodor"
-cluster_name    = "aks-west-eu-dor"
-node_count      = 2
-vm_size         = "Standard_D2s_v3"
-subscription_id = "c3dc5e7c-cd4d-46b0-b7d8-efd2e3dde06e"
+location     = "West Europe"
+environment  = "dev"
+cluster_name = "aks-learningsteps"
+node_count   = 2
+vm_size      = "Standard_D2s_v7"
+acr_name     = "acrrawad8024"
 
-acr_name = "acrwesteudoraa234"
-
-# PostgreSQL Database
+# PostgreSQL
 postgresql_database_name = "learning_journal"
+
+# subscription_id and the DB password are NOT stored here.
+# They come from TF_VAR_subscription_id and TF_VAR_postgresql_admin_password.
+postgresql_sku_name = "GP_Standard_D2ds_v5"

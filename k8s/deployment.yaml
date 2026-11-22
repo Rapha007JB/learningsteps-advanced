@@ -21,20 +21,28 @@ spec:
         app: learningsteps-api
         version: v1
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: learningsteps-api
-          image: acrwesteudora.azurecr.io/learningsteps-api:latest
+          image: acrrawad8024.azurecr.io/learningsteps-api:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
               name: http
               protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: learningsteps-config
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: learningsteps-secrets
                   key: database-url
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
           resources:
             requests:
               memory: "128Mi"
@@ -66,3 +74,12 @@ spec:
             capabilities:
               drop:
                 - ALL
+      volumes:
+        # Mounting this volume is what makes the CSI driver fetch the secret
+        # from Key Vault and create the Kubernetes Secret used above.
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: learningsteps-kv

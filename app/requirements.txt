@@ -1,8 +1,5 @@
-fastapi
-uvicorn
-python-dotenv
-aiohttp
-sqlalchemy
-psycopg2-binary
-asyncpg
-prometheus-client
+fastapi==0.165.0
+uvicorn==0.54.0
+python-dotenv==1.2.4
+asyncpg==0.32.0
+prometheus-client==0.26.0

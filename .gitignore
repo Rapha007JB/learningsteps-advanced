@@ -7,7 +7,6 @@ tfplan
 tfplan.json
 tfplan.binary
 .terraform/
-.terraform.lock.hcl
 crash.log
 override.tf
 override.tf.json
@@ -40,3 +39,9 @@ Thumbs.db
 CLAUDE.md
 .claude
 CONTEXT.md
+# local secrets and cluster access
+kubeconfig
+*.kubeconfig
+.kube/
+*.secret
+*.secret.*
