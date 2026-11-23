@@ -17,7 +17,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="LearningSteps API", description="WE'RE DONE WITH MODULE 3")
+app = FastAPI(title="LearningSteps API", description="Deployed to AKS by GitHub Actions")
 
 # Prometheus metrics
 http_requests_total = Counter(
