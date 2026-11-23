@@ -71,7 +71,7 @@ jobs:
         run: |
           docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/repo" \
             trufflesecurity/trufflehog@sha256:8fd07ea46a3f59583c4d50f006d8cf150530141b28969c3c34cc455cb9165a6b \
-            git file:///repo --results=verified --fail
+            git file:///repo --no-update --results=verified --fail
 
   # ==================================================
   # Stage 1c: Dependency vulnerability scan
