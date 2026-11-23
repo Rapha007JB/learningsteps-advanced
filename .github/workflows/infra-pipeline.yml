@@ -7,6 +7,8 @@ on:
       - master
     paths:
       - "infra-terraform/**"
+      - ".trivyignore"
+      - ".github/workflows/infra-pipeline.yml"
   pull_request:
     branches:
       - main
@@ -18,26 +20,29 @@ on:
       terraform_version:
         description: "Terraform version to use"
         required: false
-        default: "1.15.8"
+        default: "1.16.6"
         type: string
+
+permissions:
+  contents: read
 
 env:
   WORKING_DIR: infra-terraform
-  TF_VERSION: ${{ inputs.terraform_version || '1.15.8' }}
+  TF_VERSION: ${{ inputs.terraform_version || '1.16.6' }}
 
 jobs:
   # ============================================
-  # ALWAYS RUNS - No Azure credentials needed
+  # Always runs - no Azure credentials needed
   # ============================================
   security-scan:
-    name: Security Scan
+    name: IaC Security Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Trivy IaC scan (fails on HIGH or CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: "config"
           scan-ref: "${{ env.WORKING_DIR }}"
@@ -45,8 +50,8 @@ jobs:
           exit-code: "1"
           severity: "CRITICAL,HIGH"
 
-      - name: Run tfsec security scanner
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: tfsec (informational report)
+        uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 # v1.0.3
         with:
           working_directory: ${{ env.WORKING_DIR }}
           additional_args: --tfvars-file ${{ env.WORKING_DIR }}/terraform.tfvars
@@ -61,10 +66,10 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -77,79 +82,6 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-  # ============================================
-  # CONDITIONAL - Only runs if ENABLE_AZURE_DEPLOY is true
-  # Set this in: Repo Settings → Secrets and variables → Actions → Variables
-  # ============================================
-  terraform-plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: terraform-validate
-    if: vars.ENABLE_AZURE_DEPLOY == 'true' && success()
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      TF_VAR_subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
-      TF_VAR_postgresql_admin_password: ${{ secrets.POSTGRESQL_ADMIN_PASSWORD }}
-    defaults:
-      run:
-        working-directory: ${{ env.WORKING_DIR }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan.binary
-
-      - name: Upload Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: ${{ env.WORKING_DIR }}/tfplan.binary
-
-  terraform-apply:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    needs: terraform-plan
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.ENABLE_AZURE_DEPLOY == 'true'
-    environment: production
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      TF_VAR_subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
-      TF_VAR_postgresql_admin_password: ${{ secrets.POSTGRESQL_ADMIN_PASSWORD }}
-    defaults:
-      run:
-        working-directory: ${{ env.WORKING_DIR }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: ${{ env.WORKING_DIR }}
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan.binary
+  # Plan and apply are intentionally not run from CI in this project:
+  # creating the service principal they need is not permitted in this subscription.
+  # Infrastructure changes are applied manually with terraform plan / apply.

@@ -5,6 +5,8 @@ locals {
   key_vault_name = "kv-ls-${substr(var.acr_name, -4, -1)}"
 }
 
+# Lab exception: Terraform (run from a laptop) and the AKS pods reach the vault over its public endpoint.
+# Production fix: default_action = "Deny" + Microsoft.KeyVault service endpoint on the AKS subnet + ip_rules.
 resource "azurerm_key_vault" "kv" {
   name                       = local.key_vault_name
   location                   = azurerm_resource_group.rg.location

@@ -1,0 +1,6 @@
+# Documented lab exception (see infra-terraform/keyvault.tf):
+# Key Vault is reachable over its public endpoint because Terraform runs from a laptop
+# and the AKS pods read secrets through it. Production fix: default_action = "Deny"
+# with a VNet service endpoint and an IP allow-list.
+AVD-AZU-0013
+AZU-0013

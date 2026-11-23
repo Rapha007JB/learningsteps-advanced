@@ -12,8 +12,10 @@ WORKDIR /app
 # Copy requirements first for layer caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies, then remove pip itself: the running API does not need it,
+# and pip bundles its own copies of msgpack, urllib3 and setuptools that scanners flag.
+RUN pip install --no-cache-dir -r requirements.txt \
+ && pip uninstall -y pip
 
 # Copy application code
 COPY . .
